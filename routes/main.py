@@ -12,6 +12,7 @@ DATA_DIR = os.path.join(BASE_DIR, "..", "data")
 EXCEL_PATH = os.path.join(DATA_DIR, "dataCrecimiento.xlsx")
 GJSON_RURAL = os.path.join(DATA_DIR, "parroquiasRurales.geojson")
 GJSON_URBANA = os.path.join(DATA_DIR, "parroquiasUrbanas.geojson")
+GJSON_OTRAS = os.path.join(DATA_DIR, "otras.geojson")
 
 
 @main_bp.route("/")
@@ -22,6 +23,17 @@ def mapa():
     # Asegurar que esté en EPSG:4326 (WGS84)
     if gdf_rurales.crs != "EPSG:4326":
         gdf_rurales = gdf_rurales.to_crs("EPSG:4326")
+
+    # Cargar parroquias de otras.geojson y filtrar las rurales
+    gdf_otras = gpd.read_file(GJSON_OTRAS)
+    if gdf_otras.crs != "EPSG:4326":
+        gdf_otras = gdf_otras.to_crs("EPSG:4326")
+
+    # Filtrar solo las rurales de otras
+    gdf_otras_rurales = gdf_otras[gdf_otras["ur_ru"] == "RURAL"].copy()
+
+    # Combinar ambos GeoDataFrames
+    gdf_rurales = pd.concat([gdf_rurales, gdf_otras_rurales], ignore_index=True)
 
     # Cargar datos de crecimiento desde Excel
     df_crecimiento = pd.read_excel(EXCEL_PATH)
@@ -98,10 +110,20 @@ def mapa():
     # Añadir capa de parroquias rurales
     fg_parroquias = folium.FeatureGroup(name="Parroquias Rurales").add_to(m)
 
+    # Mapeo de códigos para parroquias de otras.geojson
+    codigo_otras = {"SANGOLQUÍ": "170501", "RUMIPAMBA": "170552", "COTOGCHOA": "170551"}
+
     for _, row in gdf_rurales.iterrows():
-        # Obtener nombre y código de la parroquia
+        # Obtener nombre y código de la parroquia (compatible con ambos GeoJSON)
         nombre = row.get("DPA_DESPAR", row.get("nombre", "Sin nombre"))
+        if pd.isna(nombre):
+            nombre = row.get("nombre", "Sin nombre")
+        if pd.isna(nombre):
+            nombre = "Sin nombre"
         codigo = str(row.get("DPA_PARROQ", ""))
+        if pd.isna(codigo) or codigo == "nan":
+            # Si no hay código, buscar en el mapeo de otras.geojson
+            codigo = codigo_otras.get(nombre, "")
 
         # Obtener tasa de crecimiento
         tasa = tasa_dict.get(codigo, None)
@@ -124,21 +146,27 @@ def mapa():
             tooltip=folium.GeoJsonTooltip(fields=["nombre"], aliases=["Parroquia:"]),
         ).add_to(fg_parroquias)
 
-        # Añadir etiqueta con la tasa de crecimiento en el centroide
+        # Añadir etiqueta con el nombre y la tasa de crecimiento en el centroide
+        centroide = row.geometry.centroid
         if tasa is not None:
-            centroide = row.geometry.centroid
             tasa_porcentaje = tasa * 100
-            folium.Marker(
-                location=[centroide.y, centroide.x],
-                icon=folium.DivIcon(
-                    html=f"""
-                    <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
-                        <div>{nombre}</div>
-                        <div>{tasa_porcentaje:.2f}%</div>
-                    </div>
-                """
-                ),
-            ).add_to(fg_parroquias)
+            html_label = f"""
+            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+                <div>{nombre}</div>
+                <div>{tasa_porcentaje:.2f}%</div>
+            </div>
+            """
+        else:
+            html_label = f"""
+            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+                <div>{nombre}</div>
+            </div>
+            """
+
+        folium.Marker(
+            location=[centroide.y, centroide.x],
+            icon=folium.DivIcon(html=html_label),
+        ).add_to(fg_parroquias)
 
     # Añadir control de capas
     folium.LayerControl().add_to(m)
@@ -159,6 +187,17 @@ def mapa_urbanas():
     # Asegurar que esté en EPSG:4326 (WGS84)
     if gdf_urbanas.crs != "EPSG:4326":
         gdf_urbanas = gdf_urbanas.to_crs("EPSG:4326")
+
+    # Cargar parroquias de otras.geojson y filtrar las urbanas
+    gdf_otras = gpd.read_file(GJSON_OTRAS)
+    if gdf_otras.crs != "EPSG:4326":
+        gdf_otras = gdf_otras.to_crs("EPSG:4326")
+
+    # Filtrar solo las urbanas de otras
+    gdf_otras_urbanas = gdf_otras[gdf_otras["ur_ru"] == "URBANO"].copy()
+
+    # Combinar ambos GeoDataFrames
+    gdf_urbanas = pd.concat([gdf_urbanas, gdf_otras_urbanas], ignore_index=True)
 
     # Cargar datos de crecimiento desde Excel
     df_crecimiento = pd.read_excel(EXCEL_PATH)
@@ -232,13 +271,30 @@ def mapa_urbanas():
     """
     m.get_root().html.add_child(folium.Element(legend_html))
 
+    # Mapeo de códigos para parroquias de otras.geojson
+    codigo_otras = {
+        "SANGOLQUÍ": "170501",
+        "RUMIPAMBA": "170552",
+        "COTOGCHOA": "170551",
+        "SAN PEDRO": "170502",
+        "SAN RAFAEL": "170503",
+        "FAJARDO": "170504",
+    }
+
     # Añadir capa de parroquias urbanas
     fg_parroquias = folium.FeatureGroup(name="Parroquias Urbanas").add_to(m)
 
     for _, row in gdf_urbanas.iterrows():
-        # Obtener nombre y código de la parroquia
+        # Obtener nombre y código de la parroquia (compatible con ambos GeoJSON)
         nombre = row.get("dpa_despar", row.get("nombre", "Sin nombre"))
+        if pd.isna(nombre):
+            nombre = row.get("nombre", "Sin nombre")
+        if pd.isna(nombre):
+            nombre = "Sin nombre"
         codigo = str(row.get("dpa_parroq", ""))
+        if pd.isna(codigo) or codigo == "nan":
+            # Si no hay código, buscar en el mapeo de otras.geojson
+            codigo = codigo_otras.get(nombre, "")
 
         # Obtener tasa de crecimiento
         tasa = tasa_dict.get(codigo, None)
@@ -261,21 +317,27 @@ def mapa_urbanas():
             tooltip=folium.GeoJsonTooltip(fields=["nombre"], aliases=["Parroquia:"]),
         ).add_to(fg_parroquias)
 
-        # Añadir etiqueta con la tasa de crecimiento en el centroide
+        # Añadir etiqueta con el nombre y la tasa de crecimiento en el centroide
+        centroide = row.geometry.centroid
         if tasa is not None:
-            centroide = row.geometry.centroid
             tasa_porcentaje = tasa * 100
-            folium.Marker(
-                location=[centroide.y, centroide.x],
-                icon=folium.DivIcon(
-                    html=f"""
-                    <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
-                        <div>{nombre}</div>
-                        <div>{tasa_porcentaje:.2f}%</div>
-                    </div>
-                """
-                ),
-            ).add_to(fg_parroquias)
+            html_label = f"""
+            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+                <div>{nombre}</div>
+                <div>{tasa_porcentaje:.2f}%</div>
+            </div>
+            """
+        else:
+            html_label = f"""
+            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+                <div>{nombre}</div>
+            </div>
+            """
+
+        folium.Marker(
+            location=[centroide.y, centroide.x],
+            icon=folium.DivIcon(html=html_label),
+        ).add_to(fg_parroquias)
 
     # Añadir control de capas
     folium.LayerControl().add_to(m)
