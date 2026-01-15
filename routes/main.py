@@ -29,8 +29,8 @@ def mapa():
     if gdf_otras.crs != "EPSG:4326":
         gdf_otras = gdf_otras.to_crs("EPSG:4326")
 
-    # Filtrar solo las rurales de otras
-    gdf_otras_rurales = gdf_otras[gdf_otras["ur_ru"] == "RURAL"].copy()
+    # Filtrar solo las rurales de otras y excluir FAJARDO
+    gdf_otras_rurales = gdf_otras[(gdf_otras["ur_ru"] == "RURAL") & (gdf_otras["nombre"] != "FAJARDO")].copy()
 
     # Combinar ambos GeoDataFrames
     gdf_rurales = pd.concat([gdf_rurales, gdf_otras_rurales], ignore_index=True)
@@ -111,7 +111,13 @@ def mapa():
     fg_parroquias = folium.FeatureGroup(name="Parroquias Rurales").add_to(m)
 
     # Mapeo de códigos para parroquias de otras.geojson
-    codigo_otras = {"SANGOLQUÍ": "170501", "RUMIPAMBA": "170552", "COTOGCHOA": "170551"}
+    codigo_otras = {
+        "SANGOLQUÍ": "170501",
+        "RUMIPAMBA": "170552",
+        "COTOGCHOA": "170551",
+        "SAN RAFAEL": "170503",
+        "SAN PEDRO": "170502",
+    }
 
     for _, row in gdf_rurales.iterrows():
         # Obtener nombre y código de la parroquia (compatible con ambos GeoJSON)
@@ -193,8 +199,8 @@ def mapa_urbanas():
     if gdf_otras.crs != "EPSG:4326":
         gdf_otras = gdf_otras.to_crs("EPSG:4326")
 
-    # Filtrar solo las urbanas de otras
-    gdf_otras_urbanas = gdf_otras[gdf_otras["ur_ru"] == "URBANO"].copy()
+    # Filtrar solo las urbanas de otras y excluir FAJARDO
+    gdf_otras_urbanas = gdf_otras[(gdf_otras["ur_ru"] == "URBANO") & (gdf_otras["nombre"] != "FAJARDO")].copy()
 
     # Combinar ambos GeoDataFrames
     gdf_urbanas = pd.concat([gdf_urbanas, gdf_otras_urbanas], ignore_index=True)
