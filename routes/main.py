@@ -30,7 +30,9 @@ def mapa():
         gdf_otras = gdf_otras.to_crs("EPSG:4326")
 
     # Filtrar solo las rurales de otras y excluir FAJARDO
-    gdf_otras_rurales = gdf_otras[(gdf_otras["ur_ru"] == "RURAL") & (gdf_otras["nombre"] != "FAJARDO")].copy()
+    gdf_otras_rurales = gdf_otras[
+        (gdf_otras["ur_ru"] == "RURAL") & (gdf_otras["nombre"] != "FAJARDO")
+    ].copy()
 
     # Combinar ambos GeoDataFrames
     gdf_rurales = pd.concat([gdf_rurales, gdf_otras_rurales], ignore_index=True)
@@ -57,17 +59,17 @@ def mapa():
         tasa_porcentaje = tasa * 100 if tasa < 1 else tasa
 
         if tasa_porcentaje < -1.64:
-            return "#D4C4EB"  # Morado muy claro
+            return "#E6F2FF"  # Azul muy claro (casi blanco)
         elif tasa_porcentaje < -0.46:
-            return "#9B8BC7"  # Morado claro
+            return "#CCE5FF"  # Azul muy claro
         elif tasa_porcentaje < 1.18:
-            return "#7B8ED1"  # Azul claro
+            return "#99CCFF"  # Azul claro
         elif tasa_porcentaje < 2.44:
-            return "#5B79D8"  # Azul medio
+            return "#66B3FF"  # Azul medio claro
         elif tasa_porcentaje < 3.32:
-            return "#3B5FCB"  # Azul oscuro
+            return "#3399FF"  # Azul medio
         else:
-            return "#1E3E94"  # Azul muy oscuro
+            return "#0070C0"  # Azul oscuro
 
     # Crear mapa centrado en Ecuador
     m = folium.Map(location=[-0.20, -78.50], zoom_start=11, tiles="cartodbpositron")
@@ -80,27 +82,27 @@ def mapa():
                 padding: 10px; border-radius: 5px;">
         <p style="margin: 0 0 10px 0; font-weight: bold;">Tasa de crecimiento anual población</p>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #D4C4EB; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #E6F2FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-2.82 - -1.64</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #9B8BC7; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #CCE5FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-1.63 - -0.46</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #7B8ED1; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #99CCFF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-0.45 - 1.18</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #5B79D8; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #66B3FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>1.18 - 2.44</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #3B5FCB; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #3399FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>2.44 - 3.32</span>
         </div>
         <div style="display: flex; align-items: center;">
-            <div style="width: 20px; height: 20px; background-color: #1E3E94; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #0070C0; border: 1px solid black; margin-right: 10px;"></div>
             <span>3.32 - 4.93</span>
         </div>
     </div>
@@ -200,7 +202,9 @@ def mapa_urbanas():
         gdf_otras = gdf_otras.to_crs("EPSG:4326")
 
     # Filtrar solo las urbanas de otras y excluir FAJARDO
-    gdf_otras_urbanas = gdf_otras[(gdf_otras["ur_ru"] == "URBANO") & (gdf_otras["nombre"] != "FAJARDO")].copy()
+    gdf_otras_urbanas = gdf_otras[
+        (gdf_otras["ur_ru"] == "URBANO") & (gdf_otras["nombre"] != "FAJARDO")
+    ].copy()
 
     # Combinar ambos GeoDataFrames
     gdf_urbanas = pd.concat([gdf_urbanas, gdf_otras_urbanas], ignore_index=True)
@@ -227,17 +231,17 @@ def mapa_urbanas():
         tasa_porcentaje = tasa * 100 if tasa < 1 else tasa
 
         if tasa_porcentaje < -1.64:
-            return "#D4C4EB"  # Morado muy claro
+            return "#E6F2FF"  # Azul muy claro (casi blanco)
         elif tasa_porcentaje < -0.46:
-            return "#9B8BC7"  # Morado claro
+            return "#CCE5FF"  # Azul muy claro
         elif tasa_porcentaje < 1.18:
-            return "#7B8ED1"  # Azul claro
+            return "#99CCFF"  # Azul claro
         elif tasa_porcentaje < 2.44:
-            return "#5B79D8"  # Azul medio
+            return "#66B3FF"  # Azul medio claro
         elif tasa_porcentaje < 3.32:
-            return "#3B5FCB"  # Azul oscuro
+            return "#3399FF"  # Azul medio
         else:
-            return "#1E3E94"  # Azul muy oscuro
+            return "#0070C0"  # Azul oscuro
 
     # Crear mapa centrado en Ecuador
     m = folium.Map(location=[-0.20, -78.50], zoom_start=11, tiles="cartodbpositron")
@@ -250,27 +254,27 @@ def mapa_urbanas():
                 padding: 10px; border-radius: 5px;">
         <p style="margin: 0 0 10px 0; font-weight: bold;">Tasa de crecimiento anual población</p>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #D4C4EB; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #E6F2FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-2.82 - -1.64</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #9B8BC7; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #CCE5FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-1.63 - -0.46</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #7B8ED1; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #99CCFF; border: 1px solid black; margin-right: 10px;"></div>
             <span>-0.45 - 1.18</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #5B79D8; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #66B3FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>1.18 - 2.44</span>
         </div>
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <div style="width: 20px; height: 20px; background-color: #3B5FCB; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #3399FF; border: 1px solid black; margin-right: 10px;"></div>
             <span>2.44 - 3.32</span>
         </div>
         <div style="display: flex; align-items: center;">
-            <div style="width: 20px; height: 20px; background-color: #1E3E94; border: 1px solid black; margin-right: 10px;"></div>
+            <div style="width: 20px; height: 20px; background-color: #0070C0; border: 1px solid black; margin-right: 10px;"></div>
             <span>3.32 - 4.93</span>
         </div>
     </div>
