@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -45,6 +45,13 @@
       .active-link {
         color: #28a745 !important; /* verde */
         font-weight: bold;
+      }
+
+      /* Estilos dinámicos para las etiquetas de parroquias según el zoom */
+      .parroquia-label {
+        font-size: 9px;
+        transition: font-size 0.2s ease, opacity 0.2s ease;
+        text-shadow: 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white;
       }
     </style>
   </head>
@@ -104,6 +111,49 @@
           //mapObj.scrollWheelZoom.disable();  // desactiva zoom con rueda
           //mapObj.dragging.disable();         // desactiva movimiento
           //mapObj.zoomControl.remove();       // oculta botones de zoom
+
+          // Función para ajustar el tamaño de fuente según el zoom
+          function ajustarTamañoFuente() {
+            const zoom = mapObj.getZoom();
+            let fontSize;
+            let opacity = 1;
+            
+            // Escala más agresiva de tamaños de fuente
+            if (zoom < 9) {
+              fontSize = 0; // Ocultar completamente en zoom muy bajo
+              opacity = 0;
+            } else if (zoom < 10) {
+              fontSize = 4; // Muy pequeño
+              opacity = 0.7;
+            } else if (zoom < 11) {
+              fontSize = 5;
+              opacity = 0.85;
+            } else if (zoom < 12) {
+              fontSize = 7;
+              opacity = 1;
+            } else if (zoom < 13) {
+              fontSize = 9;
+            } else if (zoom < 14) {
+              fontSize = 11;
+            } else if (zoom < 15) {
+              fontSize = 13;
+            } else {
+              fontSize = 15; // Máximo para zoom alto
+            }
+
+            // Aplicar el nuevo tamaño a todas las etiquetas
+            const labels = document.querySelectorAll(".parroquia-label");
+            labels.forEach((label) => {
+              label.style.fontSize = fontSize + "px";
+              label.style.opacity = opacity;
+            });
+          }
+
+          // Ajustar al cargar
+          ajustarTamañoFuente();
+
+          // Ajustar cuando cambia el zoom
+          mapObj.on("zoomend", ajustarTamañoFuente);
         }
       });
     </script>

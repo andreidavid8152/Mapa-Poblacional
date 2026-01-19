@@ -159,14 +159,14 @@ def mapa():
         if tasa is not None:
             tasa_porcentaje = tasa * 100
             html_label = f"""
-            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+            <div class="parroquia-label" style="font-weight: bold; color: black; text-align: center; white-space: nowrap;">
                 <div>{nombre}</div>
                 <div>{tasa_porcentaje:.2f}%</div>
             </div>
             """
         else:
             html_label = f"""
-            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+            <div class="parroquia-label" style="font-weight: bold; color: black; text-align: center; white-space: nowrap;">
                 <div>{nombre}</div>
             </div>
             """
@@ -332,14 +332,14 @@ def mapa_urbanas():
         if tasa is not None:
             tasa_porcentaje = tasa * 100
             html_label = f"""
-            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+            <div class="parroquia-label" style="font-weight: bold; color: black; text-align: center; white-space: nowrap;">
                 <div>{nombre}</div>
                 <div>{tasa_porcentaje:.2f}%</div>
             </div>
             """
         else:
             html_label = f"""
-            <div style="font-size: 9px; font-weight: bold; color: black; text-align: center;">
+            <div class="parroquia-label" style="font-weight: bold; color: black; text-align: center; white-space: nowrap;">
                 <div>{nombre}</div>
             </div>
             """
