@@ -1,0 +1,46 @@
+{
+  "por_parroquia": {
+    "INAQUITO": "UDLA",
+    "NAYON": "UDLA",
+    "JIPIJAPA": "UDLA",
+    "BELISARIO QUEVEDO": "UDLA",
+    "SAN ISIDRO DEL INCA": "UDLA",
+    "RUMIPAMBA|TIPO:URBANO": "UDLA",
+    "RUMIPAMBA|TIPO:RURAL": "VALLES",
+    "SANGOLQUI": "VALLES",
+    "COTOGCHOA": "VALLES",
+    "SAN RAFAEL": "VALLES",
+    "SAN PEDRO": "VALLES",
+    "FAJARDO": "VALLES",
+    "LLOA": "NOROCCIDENTE",
+    "SAN JOSE DE MINAS": "NOROCCIDENTE",
+    "AMAGUAÑA": "SUR",
+    "ATAHUALPA": "NORORIENTE",
+    "CHAVEZPAMBA": "NORORIENTE",
+    "PERUCHO": "NORORIENTE",
+    "PUELLARO": "NORORIENTE",
+    "SAN ANTONIO": "NORORIENTE",
+    "GUAYLLABAMBA": "NORORIENTE",
+    "EL QUINCHE": "NORORIENTE",
+    "CHECA": "NORORIENTE",
+    "TABABELA": "NORORIENTE",
+    "YARUQUI": "NORORIENTE"
+  },
+  "por_zona": {
+    "LOS CHILLOS": "VALLES",
+    "TUMBACO": "VALLES",
+    "CALDERON": "NORTE",
+    "LA DELICIA": "NORTE",
+    "EUGENIO ESPEJO": "NORTE",
+    "LA MARISCAL": "CENTRO",
+    "MANUELA SAENZ": "CENTRO",
+    "QUITUMBE": "SUR",
+    "ELOY ALFARO": "SUR",
+    "CHOCO ANDINO": "NOROCCIDENTE"
+  },
+  "lat_split": {
+    "sur_max": -0.22,
+    "norte_min": -0.15
+  },
+  "default": "OTROS"
+}
