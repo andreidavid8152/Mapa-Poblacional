@@ -50,8 +50,14 @@
       /* Estilos dinámicos para las etiquetas de parroquias según el zoom */
       .parroquia-label {
         font-size: 9px;
-        transition: font-size 0.2s ease, opacity 0.2s ease;
-        text-shadow: 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white;
+        transition:
+          font-size 0.2s ease,
+          opacity 0.2s ease;
+        text-shadow:
+          1px 1px 2px white,
+          -1px -1px 2px white,
+          1px -1px 2px white,
+          -1px 1px 2px white;
       }
     </style>
   </head>
@@ -90,6 +96,13 @@
               >Parroquias Urbanas</a
             >
           </li>
+          <li class="nav-item mx-3">
+            <a
+              class="nav-link {% if ruta_activa == 'poblacion' %}active-link{% endif %}"
+              href="/poblacion"
+              >Poblacion Parroquias</a
+            >
+          </li>
         </ul>
       </div>
     </nav>
@@ -117,7 +130,7 @@
             const zoom = mapObj.getZoom();
             let fontSize;
             let opacity = 1;
-            
+
             // Escala más agresiva de tamaños de fuente
             if (zoom < 9) {
               fontSize = 0; // Ocultar completamente en zoom muy bajo
