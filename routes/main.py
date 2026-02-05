@@ -1266,7 +1266,7 @@ def mapa_sectores():
                 localize=True,
             ),
         ).add_to(fg)
-
+        
         html_label = f"""
         <div class="parroquia-label" style="font-weight: bold; color: black; text-align: center; white-space: nowrap;">
             <div>{row.get('nombre','Sin nombre')}</div>
