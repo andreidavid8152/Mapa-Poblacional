@@ -6,7 +6,6 @@ import numpy as np
 import folium
 import os
 import unicodedata
-from scipy.cluster.vq import kmeans2
 import json
 
 
@@ -31,7 +30,9 @@ SECTORES_CONFIG_PATH = os.path.join(DATA_DIR, "sectores.json")
 
 
 DEFAULT_CRS = "EPSG:4326"
-AREA_CRS = "EPSG:32717"  # UTM 17S (Ecuador/Quito aprox.), para areas/perimetros en metros
+AREA_CRS = (
+    "EPSG:32717"  # UTM 17S (Ecuador/Quito aprox.), para areas/perimetros en metros
+)
 
 
 CODIGO_OTRAS = {
@@ -214,65 +215,6 @@ def clasificar_sectorial(gdf, config=None):
     return gdf
 
 
-def clusterizar_parroquias(gdf, k=5, incluir_espacial=False, random_seed=42):
-    gdf = gdf.copy()
-
-    df_crecimiento = pd.read_excel(EXCEL_PATH)
-    df_crecimiento["Cod_Parr"] = df_crecimiento["Cod_Parr"].astype(str)
-    tasa_dict = dict(
-        zip(
-            df_crecimiento["Cod_Parr"],
-            df_crecimiento["Tasa de crecimiento anual poblacion"],
-        )
-    )
-
-    df_poblacion = pd.read_excel(EXCEL_POBLACION)
-    df_poblacion["Parroquia_normalizada"] = df_poblacion["Parroquia"].apply(
-        normalizar_nombre
-    )
-    df_poblacion["pob_pct"] = df_poblacion["Porcentaje"].apply(convertir_a_porcentaje)
-    pob_dict = dict(zip(df_poblacion["Parroquia_normalizada"], df_poblacion["pob_pct"]))
-
-    gdf["tasa_pct"] = gdf["codigo"].map(tasa_dict).apply(convertir_a_porcentaje)
-    gdf["pob_pct"] = gdf["nombre"].apply(lambda x: pob_dict.get(normalizar_nombre(x)))
-
-    gdf_proj = asegurar_crs(gdf, DEFAULT_CRS).to_crs(AREA_CRS)
-    gdf["area_km2"] = (gdf_proj.geometry.area / 1_000_000.0).astype(float)
-
-    centroides_proj = gdf_proj.geometry.centroid
-    centroides_wgs84 = gpd.GeoSeries(centroides_proj, crs=AREA_CRS).to_crs(DEFAULT_CRS)
-    gdf["lon"] = centroides_wgs84.x.astype(float)
-    gdf["lat"] = centroides_wgs84.y.astype(float)
-
-    feature_cols = ["tasa_pct", "pob_pct", "area_km2"]
-    if incluir_espacial:
-        feature_cols += ["lon", "lat"]
-
-    X = gdf[feature_cols].astype(float)
-
-    # Imputacion simple para NaNs + estandarizacion
-    medians = X.median(numeric_only=True)
-    X = X.fillna(medians)
-
-    means = X.mean()
-    stds = X.std(ddof=0).replace(0, 1.0)
-    Xs = (X - means) / stds
-
-    # Si hay menos filas que k, ajustamos k.
-    n = len(gdf)
-    k = int(k)
-    if k < 2:
-        k = 2
-    if n < k:
-        k = max(2, n)
-
-    np.random.seed(random_seed)
-    _, labels = kmeans2(Xs.to_numpy(), k, minit="++", iter=50)
-    gdf["cluster"] = labels.astype(int) + 1
-
-    return gdf
-
-
 @main_bp.route("/")
 def mapa_rural():
 
@@ -426,9 +368,10 @@ def mapa_rural():
 
     m.get_root().html.add_child(folium.Element(legend_html))
 
-    # Añadir capa de parroquias rurales
+    # Añadir capas: polígonos y etiquetas (nombres) para poder mostrar/ocultar.
 
-    fg_parroquias = folium.FeatureGroup(name="Parroquias Rurales").add_to(m)
+    fg_parroquias = folium.FeatureGroup(name="Parroquias Rurales", show=True).add_to(m)
+    fg_nombres = folium.FeatureGroup(name="Nombres (Rurales)", show=True).add_to(m)
 
     # Mapeo de códigos para parroquias de otras.geojson
 
@@ -479,7 +422,7 @@ def mapa_rural():
             style_function=lambda _, color=fill_color: {
                 "fillColor": color,
                 "color": "black",
-                "weight": 2,
+                "weight": 0.5,
                 "fillOpacity": 0.7,
             },
             tooltip=folium.GeoJsonTooltip(fields=["nombre"], aliases=["Parroquia:"]),
@@ -517,7 +460,7 @@ def mapa_rural():
         folium.Marker(
             location=[centroide.y, centroide.x],
             icon=folium.DivIcon(html=html_label),
-        ).add_to(fg_parroquias)
+        ).add_to(fg_nombres)
 
     # Añadir control de capas
 
@@ -695,9 +638,10 @@ def mapa_urbanas():
         "FAJARDO": "170504",
     }
 
-    # Añadir capa de parroquias urbanas
+    # Añadir capas: polígonos y etiquetas (nombres) para poder mostrar/ocultar.
 
-    fg_parroquias = folium.FeatureGroup(name="Parroquias Urbanas").add_to(m)
+    fg_parroquias = folium.FeatureGroup(name="Parroquias Urbanas", show=True).add_to(m)
+    fg_nombres = folium.FeatureGroup(name="Nombres (Urbanas)", show=True).add_to(m)
 
     for _, row in gdf_urbanas.iterrows():
 
@@ -738,7 +682,7 @@ def mapa_urbanas():
             style_function=lambda _, color=fill_color: {
                 "fillColor": color,
                 "color": "black",
-                "weight": 2,
+                "weight": 0.2,
                 "fillOpacity": 0.7,
             },
             tooltip=folium.GeoJsonTooltip(fields=["nombre"], aliases=["Parroquia:"]),
@@ -776,7 +720,7 @@ def mapa_urbanas():
         folium.Marker(
             location=[centroide.y, centroide.x],
             icon=folium.DivIcon(html=html_label),
-        ).add_to(fg_parroquias)
+        ).add_to(fg_nombres)
 
     # Añadir control de capas
 
@@ -1113,7 +1057,6 @@ def mapa_poblacion():
     )
 
 
-@main_bp.route("/clusters")
 def mapa_clusters():
     k = request.args.get("k", default=5, type=int)
     scope = request.args.get("scope", default="todas", type=str)
@@ -1124,17 +1067,15 @@ def mapa_clusters():
 
     m = folium.Map(location=[-0.20, -78.50], zoom_start=11, tiles="cartodbpositron")
 
+    # 7 azules bien diferenciados (para tus 7 sectores).
     palette = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f7f",
-        "#bcbd22",
-        "#17becf",
+        "#001F3F",  # navy
+        "#003F8C",  # dark blue
+        "#0057B8",  # azure
+        "#1E88E5",  # bright blue
+        "#42A5F5",  # light blue
+        "#00B0FF",  # cyan-blue
+        "#90CAF9",  # very light blue
     ]
 
     def color_cluster(cid):
@@ -1142,12 +1083,7 @@ def mapa_clusters():
             return "#cccccc"
         return palette[(int(cid) - 1) % len(palette)]
 
-    conteo = (
-        gdf["cluster"]
-        .value_counts()
-        .sort_index()
-        .to_dict()
-    )
+    conteo = gdf["cluster"].value_counts().sort_index().to_dict()
 
     items = "\n".join(
         f"""
@@ -1188,11 +1124,17 @@ def mapa_clusters():
             "Cluster": int(cid) if pd.notna(cid) else None,
             "Tasa_%": None if tasa is None or pd.isna(tasa) else round(float(tasa), 2),
             "Pob_%": None if pob is None or pd.isna(pob) else round(float(pob), 2),
-            "Area_km2": None if area is None or pd.isna(area) else round(float(area), 2),
+            "Area_km2": (
+                None if area is None or pd.isna(area) else round(float(area), 2)
+            ),
         }
 
         folium.GeoJson(
-            {"type": "Feature", "geometry": row.geometry.__geo_interface__, "properties": props},
+            {
+                "type": "Feature",
+                "geometry": row.geometry.__geo_interface__,
+                "properties": props,
+            },
             style_function=lambda _, color=fill_color: {
                 "fillColor": color,
                 "color": "black",
@@ -1200,8 +1142,24 @@ def mapa_clusters():
                 "fillOpacity": 0.7,
             },
             tooltip=folium.GeoJsonTooltip(
-                fields=["Parroquia", "Codigo", "Tipo", "Cluster", "Tasa_%", "Pob_%", "Area_km2"],
-                aliases=["Parroquia:", "Codigo:", "Tipo:", "Cluster:", "Tasa (%):", "Poblacion (%):", "Area (km²):"],
+                fields=[
+                    "Parroquia",
+                    "Codigo",
+                    "Tipo",
+                    "Cluster",
+                    "Tasa_%",
+                    "Pob_%",
+                    "Area_km2",
+                ],
+                aliases=[
+                    "Parroquia:",
+                    "Codigo:",
+                    "Tipo:",
+                    "Cluster:",
+                    "Tasa (%):",
+                    "Poblacion (%):",
+                    "Area (km²):",
+                ],
                 localize=True,
             ),
         ).add_to(fg)
@@ -1237,17 +1195,15 @@ def mapa_sectores():
 
     m = folium.Map(location=[-0.20, -78.50], zoom_start=11, tiles="cartodbpositron")
 
+    # 7 colores combinando azules y cafés pastel
     palette = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f7f",
-        "#bcbd22",
-        "#17becf",
+        "#C8A882",  # Caramelo pastel
+        "#A8C8E1",  # Azul pastel suave
+        "#D4C5B9",  # Café con leche
+        "#7BB3D9",  # Azul medio
+        "#A68A6D",  # Café oscuro pastel
+        "#4A7BA7",  # Azul profundo
+        "#F0E6D2",  # Crema claro
     ]
 
     sectores = sorted([s for s in gdf["sector"].dropna().unique().tolist()])
@@ -1276,7 +1232,9 @@ def mapa_sectores():
     """
     m.get_root().html.add_child(folium.Element(legend_html))
 
-    fg = folium.FeatureGroup(name="Sectores").add_to(m)
+    # Capas separadas para poder mostrar/ocultar los nombres.
+    fg = folium.FeatureGroup(name="Sectores", show=True).add_to(m)
+    fg_nombres = folium.FeatureGroup(name="Nombres (Sectores)", show=True).add_to(m)
 
     for _, row in gdf.iterrows():
         sector = row.get("sector", "OTROS")
@@ -1291,11 +1249,15 @@ def mapa_sectores():
         }
 
         folium.GeoJson(
-            {"type": "Feature", "geometry": row.geometry.__geo_interface__, "properties": props},
+            {
+                "type": "Feature",
+                "geometry": row.geometry.__geo_interface__,
+                "properties": props,
+            },
             style_function=lambda _, color=fill_color: {
                 "fillColor": color,
                 "color": "black",
-                "weight": 2,
+                "weight": 0.1,
                 "fillOpacity": 0.7,
             },
             tooltip=folium.GeoJsonTooltip(
@@ -1314,7 +1276,7 @@ def mapa_sectores():
         folium.Marker(
             location=[row.get("lat", None), row.get("lon", None)],
             icon=folium.DivIcon(html=html_label),
-        ).add_to(fg)
+        ).add_to(fg_nombres)
 
     folium.LayerControl().add_to(m)
 
